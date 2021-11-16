@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('SECRET_KEY')
@@ -21,6 +22,11 @@ def comma_separated_list(value: str):
 ALLOWED_HOSTS = comma_separated_list(os.getenv('ALLOWED_HOSTS'))
 
 
+# CORS_ALLOWED_ORIGINS = comma_separated_list(
+#     os.getenv('CORS_ALLOWED_ORIGINS')
+# )
+CORS_ALLOW_ALL_ORIGINS = True
+
 INSTALLED_APPS = [
     'users.apps.UsersConfig',
     'food.apps.FoodConfig',
@@ -32,11 +38,18 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'colorfield',
+    'drf_yasg',
+    'corsheaders',
+    # 'rest_framework',
+    # 'rest_framework_simplejwt',
+    # 'django_filters',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -105,7 +118,10 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-LANGUAGE_CODE = 'en-us'
+AUTH_USER_MODEL = 'users.CustomUser'
+
+
+LANGUAGE_CODE = 'ru-ru'
 TIME_ZONE = 'Europe/Moscow'
 USE_I18N = True
 USE_L10N = True
@@ -120,3 +136,14 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'Token': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header'
+        }
+    }
+}
