@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     'colorfield',
     'drf_yasg',
     'corsheaders',
-    # 'rest_framework',
+    'rest_framework',
     # 'rest_framework_simplejwt',
     # 'django_filters',
 ]
@@ -147,3 +147,23 @@ SWAGGER_SETTINGS = {
         }
     }
 }
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny'
+    ],
+    # 'DEFAULT_PERMISSION_CLASSES': [
+    #     'rest_framework.permissions.IsAuthenticated',
+    # ],
+    # 'DEFAULT_AUTHENTICATION_CLASSES': [
+    #     'rest_framework_simplejwt.authentication.JWTAuthentication',
+    # ],
+    # 'DEFAULT_FILTER_BACKENDS': [
+    #     'django_filters.rest_framework.DjangoFilterBackend'
+    # ],
+}
+
+# SIMPLE_JWT = {
+#     'ACCESS_TOKEN_LIFETIME': timedelta(days=3),
+#     'AUTH_HEADER_TYPES': ('Bearer',),
+# }
