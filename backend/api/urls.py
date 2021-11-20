@@ -7,7 +7,7 @@ from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions, routers
 
-from .views import IngredientsViewSet, RecipeViewSet, TagViewSet, UserViewSet
+from . import views
 
 load_dotenv()
 
@@ -16,18 +16,24 @@ app_name = 'api'
 
 router = routers.DefaultRouter()
 
-router.register('tags', TagViewSet, basename='tags')
-router.register('recipes', RecipeViewSet,
+router.register('tags', views.TagViewSet, basename='tags')
+router.register('recipes', views.RecipeViewSet,
                 basename='recipes')
-router.register('ingredients', IngredientsViewSet,
+router.register('ingredients', views.IngredientsViewSet,
                 basename='ingredients')
-router.register('users', UserViewSet, basename='users')
+router.register('users', views.CustomUserViewSet, basename='users')
 
 
 urlpatterns = [
     path('', include(router.urls)),
-#     path('auth/signup/', views.SignupView.as_view()),
-#     path('auth/token/', views.ConfirmationView.as_view())
+    path(
+        'auth/token/login/',
+        views.CustomTokenCreateView.as_view(), name="login"
+    ),
+    path(
+        'auth/token/logout/',
+        views.CustomTokenDestroyView.as_view(), name="logout"
+    ),
 ]
 
 

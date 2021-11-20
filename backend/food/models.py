@@ -91,6 +91,9 @@ class TagInRecipe(models.Model):
             )
         ]
 
+    def __str__(self):
+        return f'Тэг "{self.tag}" рецепта "{self.recipe}".'
+
 
 class IngredientInRecipe(models.Model):
     ingredient = models.ForeignKey(Ingredient,
@@ -115,3 +118,6 @@ class IngredientInRecipe(models.Model):
                 name='recipe_ingredient_unique'
             )
         ]
+
+    def __str__(self):
+        return f'Ингридиент "{self.ingredient}" рецепта "{self.recipe}".'
