@@ -1,6 +1,5 @@
 import os
 
-from django.conf.urls import url
 from django.urls import include, path
 from dotenv import load_dotenv
 from drf_yasg import openapi
@@ -49,10 +48,16 @@ schema_view = get_schema_view(
     permission_classes=(permissions.AllowAny,),
 )
 
+
 urlpatterns += [
-    url(r'^docs/swagger(?P<format>\.json|\.yaml)$',
-        schema_view.without_ui(cache_timeout=0), name='schema-json'),
-    url(r'^docs/swagger/$',
+    path(
+        'docs/swagger/json',
+        schema_view.without_ui(cache_timeout=0),
+        name='schema-json'
+    ),
+    path(
+        'docs/swagger/',
         schema_view.with_ui('swagger', cache_timeout=0),
-        name='schema-swagger-ui'),
+        name='schema-swagger-ui'
+    ),
 ]

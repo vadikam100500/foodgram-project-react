@@ -4,7 +4,7 @@ from djoser.views import TokenCreateView, TokenDestroyView
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import filters, status
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
@@ -39,7 +39,7 @@ class CustomTokenDestroyView(TokenDestroyView):
     decorator=swagger_auto_schema(auto_schema=None)
 )
 class CustomUserViewSet(ModelViewSet):
-    queryset = User.objects.all()
+    queryset = User.objects.all().order_by('id')
     serializer_class = serializers.CustomUserSerializer
     pagination_class = LimitPagination
     permission_classes = (IsAdminOrReadIfAuthenticatedObjPerm,)
@@ -96,3 +96,4 @@ class RecipeViewSet(ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = serializers.RecipeSerializer
     pagination_class = LimitPagination
+    permission_classes = (AllowAny,)

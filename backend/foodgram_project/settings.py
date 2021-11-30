@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'djoser',
+    'django_extensions',
     # 'django_filters',
 ]
 
@@ -167,3 +168,6 @@ SWAGGER_SETTINGS = {
 DJOSER = {
     'LOGIN_FIELD': 'email',
 }
+
+SHELL_PLUS = "ipython"
+SHELL_PLUS_PRINT_SQL = True
