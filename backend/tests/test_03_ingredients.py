@@ -147,16 +147,12 @@ class Test03IngredientAPI:
                 'какие поля заполенены неправильно'
             )
         data = {'name': 'фрукт', 'measurement_unit': 'шт'}
-        response = None
-        try:
-            response = user_superuser_client.post(self.url, data=data)
-            assert response.status_code != 201 (
-                'Проверь, что нельзя создать 2 '
-                'одинковых ингридиента с токеном админа '
-            )
-        except IntegrityError:
-            pass
-        assert response is None, (
+        response = user_superuser_client.post(self.url, data=data)
+        assert response.status_code != 201, (
+            'Проверь, что нельзя создать 2 '
+            'одинковых ингридиента с токеном админа '
+        )
+        assert response.status_code == 400, (
             'Проверь, что нельзя создать 2 одинковых'
             'ингридиента с токеном админа '
         )

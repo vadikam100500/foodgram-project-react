@@ -28,10 +28,12 @@ class Test05RecipeAPI:
             ingr_data[ind - 1]['amount'] = data_iirs[ind - 1]['amount']
             data_recipes[ind - 1]['tags'] = [tags_data[ind - 1]]
             data_recipes[ind - 1]['ingredients'] = [ingr_data[ind - 1]]
+            data_recipes[ind - 1]['image'] = ('http://testserver/media/'
+                                              f'recipes/image{ind}.jpeg')
         check_data_recipes = self.data_add_del(
-            self.data_add_del(data_recipes, 'is_favorite', False),
+            self.data_add_del(data_recipes, 'is_favorited', False),
             'is_in_shopping_cart', False
-        )
+        )[::-1]
 
         whowhat = {
             'не авторизованный польз-ль': client.get(self.url),
@@ -57,7 +59,7 @@ class Test05RecipeAPI:
                 f'для {who} возвращаете данные без  пагинации, '
                 'если не указан параметр `limit`'
             )
-            assert 'is_favorite' in data[0], (
+            assert 'is_favorited' in data[0], (
                 f'Проверь, что при GET запросе `{self.url}` '
                 f'для {who}  есть параметр is_favorite'
             )
@@ -89,8 +91,8 @@ class Test05RecipeAPI:
                 )
                 assert (
                     len(data['results']) == 2
-                    and data['results'][0] == check_data_recipes[-1]
-                    and data['results'][1] == check_data_recipes[-2]
+                    and data['results'][0] == check_data_recipes[0]
+                    and data['results'][1] == check_data_recipes[1]
                 ), (
                     f'Проверь, что при GET запросе `{self.url}?limit=2` '
                     f'для {who} возвращаете данные с пагинацией. '
@@ -107,7 +109,7 @@ class Test05RecipeAPI:
             data = response.json()
             assert (
                 len(data['results']) == 1
-                and data['results'][0] == check_data_recipes[0]
+                and data['results'][0] == check_data_recipes[2]
             ), (
                 f'Проверь, что при GET запросе `{self.url}?page=2&limit=2` '
                 f'для {who} возвращаете корректные данные при указании '
@@ -134,10 +136,12 @@ class Test05RecipeAPI:
             ingr_data[ind - 1]['amount'] = data_iirs[ind - 1]['amount']
             data_recipes[ind - 1]['tags'] = [tags_data[ind - 1]]
             data_recipes[ind - 1]['ingredients'] = [ingr_data[ind - 1]]
+            data_recipes[ind - 1]['image'] = ('http://testserver/media/'
+                                              f'recipes/image{ind}.jpeg')
         check_data_recipes = self.data_add_del(
-            self.data_add_del(data_recipes, 'is_favorite', False),
+            self.data_add_del(data_recipes, 'is_favorited', False),
             'is_in_shopping_cart', False
-        )
+        )[::-1]
         whowhat = {
             'не авторизованный польз-ль': client.get(f'{self.url}?'
                                                      'author=1'),
@@ -243,8 +247,10 @@ class Test05RecipeAPI:
             ingr_data[ind - 1]['amount'] = data_iirs[ind - 1]['amount']
             data_recipes[ind - 1]['tags'] = [tags_data[ind - 1]]
             data_recipes[ind - 1]['ingredients'] = [ingr_data[ind - 1]]
+            data_recipes[ind - 1]['image'] = ('http://testserver/media/'
+                                              f'recipes/image{ind}.jpeg')
         check_data_recipes = self.data_add_del(
-            self.data_add_del(data_recipes, 'is_favorite', False),
+            self.data_add_del(data_recipes, 'is_favorited', False),
             'is_in_shopping_cart', False
         )
         whowhat = {
@@ -320,35 +326,59 @@ class Test05RecipeAPI:
     def test_06_recipe_main_post_all(self, user_client,
                                      user_superuser_client,
                                      create_ingredient,
-                                     create_tags):
-        from food.models import Recipe
+                                     create_tags, user,
+                                     user_superuser):
+        import json
+
+        from food.models import IngredientInRecipe, Recipe, TagInRecipe
 
         create_ingredient, create_tags
         data = {
-            "ingredients": [{"id": 1, "amount": 10}],
-            "tags": [1, 2],
-            "image": ("data:image/png;base64,iVBORw0KGgoA"
-                      "AAANSUhEUgAAAAEAAAABAgMAAABieywaAA"
-                      "AACVBMVEUAAAD///9fX1/S0ecCAAAACXBI"
-                      "WXMAAA7EAAAOxAGVKw4bAAAACklEQVQImW"
-                      "NoAAAAggCByxOyYQAAAABJRU5ErkJggg=="),
-            "name": "string",
-            "text": "string",
-            "cooking_time": 1
+            'name': 'string',
+            'text': 'string',
+            'cooking_time': 1,
+            'image': ('data:image/png;base64,iVBORw0KGgoA'
+                      'AAANSUhEUgAAAAEAAAABAgMAAABieywaAA'
+                      'AACVBMVEUAAAD///9fX1/S0ecCAAAACXBI'
+                      'WXMAAA7EAAAOxAGVKw4bAAAACklEQVQImW'
+                      'NoAAAAggCByxOyYQAAAABJRU5ErkJggg=='),
+            'tags': [1, 2],
+            'ingredients': [{'id': 1, 'amount': 10}]
         }
         responses = {
-            'user': user_client.post(self.url, data=data),
-            'admin': user_superuser_client.post(self.url, data=data)
+            'user': (user_client.post(self.url, data=json.dumps(data),
+                                      content_type="application/json"),
+                     user),
+            'admin': (
+                user_superuser_client.post(self.url, data=json.dumps(data),
+                                           content_type="application/json"),
+                user_superuser
+            )
         }
-        for who, response in responses.items():
+        for who, (response, client) in responses.items():
             assert response.status_code == 201, (
                 f'Проверь, что при POST запросе `{self.url}` c токеном '
                 f'авторизации {who} возвращается статус 201'
             )
-            assert Recipe.objects.filter(name='string').exists(), (
-                'Проверь что что при POST запросе `{self.url}` c токеном '
+            assert Recipe.objects.filter(
+                name=data['name'], text=data['text'],
+                cooking_time=data['cooking_time']
+            ).exists(), (
+                f'Проверь что что при POST запросе `{self.url}` c токеном '
                 f'авторизации {who} рецепт создался в базе'
             )
+            recipe = Recipe.objects.get(name='string', author=client)
+            assert TagInRecipe.objects.filter(recipe=recipe).exists(), (
+                f'Проверь что что при POST запросе `{self.url}` c токеном '
+                f'авторизации {who} рецепт создался в базе правильно.'
+                'Нет данных в промежуточно таблице рецептов.'
+            )
+            assert IngredientInRecipe.objects.filter(recipe=recipe).exists(), (
+                f'Проверь что что при POST запросе `{self.url}` c токеном '
+                f'авторизации {who} рецепт создался в базе правильно.'
+                'Нет данных в промежуточно таблице ингидиентов.'
+            )
+            recipe.delete()
 
     @pytest.mark.django_db(transaction=True)
     def test_07_recipe_detail_admin_patch(self, user_superuser_client,
@@ -371,7 +401,9 @@ class Test05RecipeAPI:
     def test_08_recipe_detail_author_and_admin(self, user_client,
                                                user_superuser_client,
                                                create_ingredient,
-                                               create_tags):
+                                               create_tags, create_recipes):
+        import json
+
         from food.models import Recipe
 
         create_ingredient, create_tags
@@ -385,10 +417,11 @@ class Test05RecipeAPI:
                       "NoAAAAggCByxOyYQAAAABJRU5ErkJggg=="),
             "name": "string",
             "text": "string",
-            "cooking_time": 1,
-            "id": 1
+            "cooking_time": 1
         }
-        user_client.post(self.url, data=data)
+        response = user_client.post(self.url, data=json.dumps(data),
+                                    content_type="application/json")
+        url_detail = f'{self.url}6/'
         data_new = {
             "ingredients": [{"id": 2, "amount": 20}],
             "tags": [2, 3],
@@ -401,28 +434,50 @@ class Test05RecipeAPI:
             "text": "string_new",
             "cooking_time": 100500
         }
-        responses = {
-            'user': (
-                user_client.put(self.url_detail, data=data_new),
-                data_new['name']
-            ),
-            'admin': (
-                user_superuser_client.put(self.url_detail, data=data),
-                data['name']
-            )
-        }
-        for who, (response, name) in responses.items():
-            assert response.status_code == 200, (
-                f'Проверь, что при PUT запросе `{self.url_detail}` c токеном '
-                f'авторизации {who} возвращается статус 200'
-            )
-            assert Recipe.objects.filter(id=1, name=name).exists(), (
-                'Проверь что что при PUT запросе `{self.url_detail}` '
-                f'c токеном авторизации {who} рецепт обновился'
-            )
+        response = user_client.put(url_detail, data=json.dumps(data_new),
+                                   content_type="application/json")
+        assert response.status_code == 200, (
+            f'Проверь, что при PUT запросе `{self.url_detail}` c токеном '
+            'авторизации автора возвращается статус 200'
+        )
+        assert Recipe.objects.filter(id=6, name=data_new['name']).exists(), (
+            f'Проверь что что при PUT запросе `{self.url_detail}` '
+            'c токеном авторизации автора рецепт обновился'
+        )
+        response = user_superuser_client.put(url_detail, data=json.dumps(data),
+                                             content_type="application/json")
+        assert response.status_code == 200, (
+            f'Проверь, что при PUT запросе `{self.url_detail}` c токеном '
+            'авторизации админа возвращается статус 200'
+        )
+        assert Recipe.objects.filter(id=6, name=data['name']).exists(), (
+            f'Проверь что что при PUT запросе `{self.url_detail}` '
+            'c токеном авторизации админа рецепт обновился'
+        )
         data = {'name': 'blablabla'}
-        assert user_client.patch(self.url_detail,
+        assert user_client.patch(url_detail,
                                  data=data_new).status_code == 403, (
             'Проверь, что метод PATCH запрещен '
             f'для владельца на {self.url_detail}'
+        )
+        response = user_client.delete(url_detail)
+        assert response.status_code == 204, (
+            f'Проверь что что при DELETE запросе `{self.url_detail}` '
+            'c токеном авторизации автора возвращается статус 204'
+        )
+        assert not Recipe.objects.filter(id=6, name=data['name']).exists(), (
+            f'Проверь что что при DELETE запросе `{self.url_detail}` '
+            'c токеном авторизации автора рецепт удалился'
+        )
+        user_superuser_client.post(self.url, data=json.dumps(data_new),
+                                   content_type="application/json")
+        url_detail = f'{self.url}7/'
+        response = user_superuser_client.delete(url_detail)
+        assert response.status_code == 204, (
+            f'Проверь что что при DELETE запросе `{self.url_detail}` '
+            'c токеном авторизации автора возвращается статус 204'
+        )
+        assert not Recipe.objects.filter(id=7, name=data['name']).exists(), (
+            f'Проверь что что при DELETE запросе `{self.url_detail}` '
+            'c токеном авторизации автора рецепт удалился'
         )

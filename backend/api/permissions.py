@@ -15,3 +15,22 @@ class IsAdminOrReadOnly(BasePermission):
             request.method in SAFE_METHODS
             or (request.user and request.user.is_staff)
         )
+
+
+class RecipePermission(BasePermission):
+    def has_permission(self, request, view):
+        return bool(
+            request.method in SAFE_METHODS
+            or (request.user and request.user.is_authenticated)
+        )
+
+    def has_object_permission(self, request, view, obj):
+        user = request.user
+        if request.method == 'PATCH':
+            return bool(request.user
+                        and request.user.is_staff)
+        return bool(
+            request.method in SAFE_METHODS
+            or (request.user and request.user.is_staff)
+            or (request.user and obj.author == user)
+        )

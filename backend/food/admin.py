@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.utils.html import format_html
 
 from .models import Ingredient, IngredientInRecipe, Recipe, Tag, TagInRecipe
 
@@ -32,7 +33,7 @@ class TagInRecipeAdmin(admin.StackedInline):
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
     list_display = (
-        'name', 'author', 'text',
+        'name', 'author', 'text', 'recipe_image',
         'pub_date', 'cooking_time', 'favorite'
     )
     list_select_related = True
@@ -45,6 +46,11 @@ class RecipeAdmin(admin.ModelAdmin):
     @admin.display(description='В избранном')
     def favorite(self, obj):
         return obj.favorite_recipe.count()
+
+    def recipe_image(self, obj):
+        return format_html(
+            '<img src="{}" width=50px; height=50px;>'.format(obj.image.url)
+        )
 
 
 @admin.register(IngredientInRecipe)

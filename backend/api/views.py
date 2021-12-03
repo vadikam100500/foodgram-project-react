@@ -1,19 +1,22 @@
 from django.contrib.auth import get_user_model, tokens
+from django.utils.decorators import method_decorator
 from djoser.serializers import SetPasswordSerializer
 from djoser.views import TokenCreateView, TokenDestroyView
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import filters, status
 from rest_framework.decorators import action
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from food.models import Ingredient, Recipe, Tag
+from users.serializers import CustomUserGetSerializer, CustomUserSerializer
 
 from . import serializers
-from .decorators import multi_method_decorator
+from .decorators import multi_method_decorator, request_body
 from .pagination import LimitPagination
-from .permissions import IsAdminOrReadIfAuthenticatedObjPerm, IsAdminOrReadOnly
+from .permissions import (IsAdminOrReadIfAuthenticatedObjPerm,
+                          IsAdminOrReadOnly, RecipePermission)
 
 User = get_user_model()
 
@@ -40,14 +43,14 @@ class CustomTokenDestroyView(TokenDestroyView):
 )
 class CustomUserViewSet(ModelViewSet):
     queryset = User.objects.all().order_by('id')
-    serializer_class = serializers.CustomUserSerializer
+    serializer_class = CustomUserSerializer
     pagination_class = LimitPagination
     permission_classes = (IsAdminOrReadIfAuthenticatedObjPerm,)
     token_generator = tokens.default_token_generator
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve', 'me'):
-            return serializers.CustomUserGetSerializer
+            return CustomUserGetSerializer
         elif self.action == 'set_password':
             return SetPasswordSerializer
         return self.serializer_class
@@ -92,8 +95,26 @@ class IngredientsViewSet(ModelViewSet):
     search_fields = ('^name',)
 
 
+@method_decorator(
+    swagger_auto_schema(
+        request_body=request_body,
+        responses={201: serializers.RecipeSerializer}
+    ),
+    name='create'
+)
+@method_decorator(
+    swagger_auto_schema(
+        request_body=request_body,
+        responses={200: serializers.RecipeSerializer}
+    ),
+    name='update'
+)
+@method_decorator(
+    swagger_auto_schema(auto_schema=None),
+    name='partial_update'
+)
 class RecipeViewSet(ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = serializers.RecipeSerializer
     pagination_class = LimitPagination
-    permission_classes = (AllowAny,)
+    permission_classes = (RecipePermission,)
