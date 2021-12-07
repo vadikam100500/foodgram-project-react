@@ -20,10 +20,10 @@ class CustomUserManager(UserManager):
             if not field:
                 raise ValueError(message)
         email = self.normalize_email(email)
-        GlobalUserModel = apps.get_model(
+        globalusermodel = apps.get_model(
             self.model._meta.app_label, self.model._meta.object_name
         )
-        username = GlobalUserModel.normalize_username(username)
+        username = globalusermodel.normalize_username(username)
         user = self.model(
             username=username, email=email, first_name=first_name,
             last_name=last_name, **extra_fields

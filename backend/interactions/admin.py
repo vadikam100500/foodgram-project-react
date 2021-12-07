@@ -5,7 +5,7 @@ from .models import Favorite, Follow, Purchase
 
 @admin.register(Favorite)
 class FavoriteAdmin(admin.ModelAdmin):
-    list_display = ('user', 'recipe', 'date_added')
+    list_display = ('id', 'user', 'recipe', 'date_added')
     list_select_related = True
     list_filter = ('user__username',)
     search_fields = ('user__username',)
@@ -13,7 +13,7 @@ class FavoriteAdmin(admin.ModelAdmin):
 
 @admin.register(Follow)
 class FollowAdmin(admin.ModelAdmin):
-    list_display = ('user', 'author', 'subscription_date')
+    list_display = ('id', 'user', 'author', 'subscription_date')
     list_select_related = True
     list_filter = ('user__username',)
     search_fields = ('user__username',)
@@ -21,7 +21,7 @@ class FollowAdmin(admin.ModelAdmin):
 
 @admin.register(Purchase)
 class PurchaseAdmin(admin.ModelAdmin):
-    list_display = ('user', 'recipe', 'date_added')
+    list_display = ('id', 'user', 'recipe', 'date_added')
     list_select_related = True
     list_filter = ('user__username',)
     search_fields = ('user__username',)

@@ -31,7 +31,7 @@ class Test03IngredientAPI:
             f'Проверь, что при GET запросе `{self.url}?limit=1` '
             'возвращаются все данные'
         )
-        search = f'{self.url}?search=%D1%84%D1%80%D1%83'
+        search = f'{self.url}?name=%D1%84%D1%80%D1%83'
         assert client.get(search).json() == [dict(main_data[2])], (
             f'Проверь, что для {self.url} включен поиск'
         )

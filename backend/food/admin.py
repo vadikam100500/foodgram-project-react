@@ -7,14 +7,14 @@ from .models import Ingredient, IngredientInRecipe, Recipe, Tag, TagInRecipe
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
     prepopulated_fields = {"slug": ("name",)}
-    list_display = ('name', 'slug', 'color')
+    list_display = ('id', 'name', 'slug', 'color')
     list_filter = ('name',)
     search_fields = ('name',)
 
 
 @admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
-    list_display = ('name', 'measurement_unit')
+    list_display = ('id', 'name', 'measurement_unit')
     search_fields = ('name',)
     list_filter = ('name',)
     empty_value_display = '-пусто-'
@@ -33,7 +33,7 @@ class TagInRecipeAdmin(admin.StackedInline):
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
     list_display = (
-        'name', 'author', 'text', 'recipe_image',
+        'id', 'name', 'author', 'text', 'recipe_image',
         'pub_date', 'cooking_time', 'favorite'
     )
     list_select_related = True
@@ -55,13 +55,13 @@ class RecipeAdmin(admin.ModelAdmin):
 
 @admin.register(IngredientInRecipe)
 class RecipeAndIngredientAdmin(admin.ModelAdmin):
-    list_display = ('recipe', 'ingredient', 'amount')
+    list_display = ('id', 'recipe', 'ingredient', 'amount')
     list_filter = ('recipe__name',)
     search_fields = ('recipe__name',)
 
 
 @admin.register(TagInRecipe)
 class RecipeAndTagAdmin(admin.ModelAdmin):
-    list_display = ('recipe', 'tag')
+    list_display = ('id', 'recipe', 'tag')
     list_filter = ('recipe__name',)
     search_fields = ('recipe__name',)

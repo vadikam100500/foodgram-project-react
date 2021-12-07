@@ -141,7 +141,7 @@ class Test05RecipeAPI:
         check_data_recipes = self.data_add_del(
             self.data_add_del(data_recipes, 'is_favorited', False),
             'is_in_shopping_cart', False
-        )[::-1]
+        )
         whowhat = {
             'не авторизованный польз-ль': client.get(f'{self.url}?'
                                                      'author=1'),
@@ -174,8 +174,8 @@ class Test05RecipeAPI:
             data = response.json()
             assert (
                 len(data) == 2
-                and data[0] == check_data_recipes[0]
-                and data[1] == check_data_recipes[1]
+                and data[0] == check_data_recipes[1]
+                and data[1] == check_data_recipes[0]
             ), (
                 f'Проверь, что при GET запросе `{self.url}?author=1` '
                 f'для {who} возвращаете корректные данные при указании '
@@ -188,34 +188,33 @@ class Test05RecipeAPI:
         favorite1 = Favorite.objects.create(user=user_test, recipe=recipe)
         favorite2 = Favorite.objects.create(user=user_admin, recipe=recipe)
         responses = {
-            'user': (favorite1, user_client.get(f'{self.url}?is_favorited=1')),
+            'user': (favorite1, user_client.get(f'{self.url}?is_favorited=true')),
             'admin': (favorite2, user_superuser_client.get(f'{self.url}?'
-                                                           'is_favorited=1'))
+                                                           'is_favorited=true'))
         }
         for who, (favorite, response) in responses.items():
             data = response.json()
+            check_data_recipes[0]['is_favorited'] = True
             assert (
                 len(data) == 1
                 and data[0] == check_data_recipes[0]
             ), (
-                f'Проверь, что при GET запросе `{self.url}?is_favorited=1` '
+                f'Проверь, что при GET запросе `{self.url}?is_favorited=true` '
                 f'для {who} возвращаете корректные данные при указании '
                 'фильтрации по избранному'
             )
             favorite.delete()
-        assert client.get(f'{self.url}?is_favorited=1').json() == [], (
-            f'Проверь, что при GET запросе `{self.url}?is_favorited=1` '
-            'для не авторизованного пользователя возвращаете пустой список'
-        )
         cart1 = Purchase.objects.create(user=user_test, recipe=recipe)
         cart2 = Purchase.objects.create(user=user_admin, recipe=recipe)
         responses = {
             'user': (cart1, user_client.get(f'{self.url}?'
-                                            'is_in_shopping_cart=1')),
+                                            'is_in_shopping_cart=true')),
             'admin': (cart2, user_superuser_client.get(f'{self.url}?'
                                                        'is_in_shopping'
-                                                       '_cart=1'))
+                                                       '_cart=true'))
         }
+        check_data_recipes[0]['is_favorited'] = False
+        check_data_recipes[0]['is_in_shopping_cart'] = True
         for who, (cart, response) in responses.items():
             data = response.json()
             assert (
@@ -228,10 +227,6 @@ class Test05RecipeAPI:
                 'фильтрации по корзине'
             )
             cart.delete()
-        assert client.get(f'{self.url}?is_in_shopping_cart=1').json() == [], (
-            f'Проверь, что при GET запросе `{self.url}?is_favorited=1` '
-            'для не авторизованного пользователя возвращаете пустой список'
-        )
 
     @pytest.mark.django_db(transaction=True)
     def test_03_recipe_detail_get_all(self, client, user_client,

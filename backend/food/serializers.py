@@ -4,10 +4,10 @@ from drf_base64.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
-from food.models import (Ingredient, IngredientInRecipe, Recipe, Tag,
-                         TagInRecipe)
 from interactions.models import Favorite, Purchase
 from users.serializers import CustomUserGetSerializer
+
+from .models import Ingredient, IngredientInRecipe, Recipe, Tag, TagInRecipe
 
 User = get_user_model()
 
@@ -162,10 +162,13 @@ class RecipeSerializer(serializers.ModelSerializer):
     def ingrs_tags_create(self, ingredients, tags, recipe):
         with transaction.atomic():
             for ingredient in ingredients:
+                amount = ingredient.get('amount')
+                if not amount:
+                    amount = 0
                 ingr_amount = IngredientInRecipe.objects.create(
                     recipe=recipe,
                     ingredient_id=ingredient.get('id'),
-                    amount=ingredient.get('amount')
+                    amount=amount
                 )
                 ingr_amount.save()
             for tag_id in tags:
@@ -218,3 +221,9 @@ class RecipeSerializer(serializers.ModelSerializer):
                 IngredientInRecipe.objects.filter(recipe=recipe).delete()
                 TagInRecipe.objects.filter(recipe=recipe).delete()
                 self.ingrs_tags_create(ingredients, tags, recipe)
+
+
+class RecipeLiteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Recipe
+        fields = ('id', 'name', 'image', 'cooking_time')

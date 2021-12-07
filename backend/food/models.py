@@ -117,8 +117,8 @@ class IngredientInRecipe(models.Model):
                                related_name='ingr_amount',
                                verbose_name='Рецепт')
     amount = models.PositiveIntegerField(
-        blank=True, null=True,
-        verbose_name='Количество ингредиента',
+        blank=True, null=True, default=0,
+        verbose_name='Количество ингредиента'
     )
 
     class Meta:

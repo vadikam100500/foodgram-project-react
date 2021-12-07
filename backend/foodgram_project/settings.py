@@ -45,7 +45,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'djoser',
     'django_extensions',
-    # 'django_filters',
+    'django_filters',
 ]
 
 MIDDLEWARE = [
@@ -147,10 +147,11 @@ REST_FRAMEWORK = {
 
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
-    ]
-    # 'DEFAULT_FILTER_BACKENDS': [
-    #     'django_filters.rest_framework.DjangoFilterBackend'
-    # ],
+    ],
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+    ],
+    'SEARCH_PARAM': 'name'
 }
 
 
@@ -169,5 +170,5 @@ DJOSER = {
     'LOGIN_FIELD': 'email',
 }
 
-SHELL_PLUS = "ipython"
+SHELL_PLUS = 'ipython'
 SHELL_PLUS_PRINT_SQL = True
