@@ -7,9 +7,15 @@ from .models import Ingredient, IngredientInRecipe, Recipe, Tag, TagInRecipe
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
     prepopulated_fields = {"slug": ("name",)}
-    list_display = ('id', 'name', 'slug', 'color')
+    list_display = ('id', 'name', 'slug', 'color', 'preview')
     list_filter = ('name',)
     search_fields = ('name',)
+
+    def preview(self, obj):
+        return format_html(
+            f'<span style="color:{obj.color}; '
+            f'width=20px; height=20px;">{obj.name}</span>'
+        )
 
 
 @admin.register(Ingredient)
@@ -49,7 +55,7 @@ class RecipeAdmin(admin.ModelAdmin):
 
     def recipe_image(self, obj):
         return format_html(
-            '<img src="{}" width=50px; height=50px;>'.format(obj.image.url)
+            f'<img src="{obj.image.url}" width=50px; height=50px;>'
         )
 
 

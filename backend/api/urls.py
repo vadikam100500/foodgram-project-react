@@ -1,6 +1,7 @@
 import os
 
 from django.urls import include, path
+from djoser.views import TokenDestroyView
 from dotenv import load_dotenv
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
@@ -29,10 +30,7 @@ urlpatterns = [
         'auth/token/login/',
         views.CustomTokenCreateView.as_view(), name="login"
     ),
-    path(
-        'auth/token/logout/',
-        views.CustomTokenDestroyView.as_view(), name="logout"
-    ),
+    path('auth/token/logout/', TokenDestroyView.as_view(), name="logout")
 ]
 
 

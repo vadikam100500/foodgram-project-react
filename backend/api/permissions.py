@@ -26,9 +26,16 @@ class RecipePermission(BasePermission):
 
     def has_object_permission(self, request, view, obj):
         user = request.user
+
+        # for TOR
+        # if request.method == 'PATCH':
+        #     return bool(request.user
+        #                 and request.user.is_staff)
+
+        # for frontend
         if request.method == 'PATCH':
             return bool(request.user
-                        and request.user.is_staff)
+                        and request.user.is_authenticated)
         return bool(
             request.method in SAFE_METHODS
             or (request.user and request.user.is_staff)

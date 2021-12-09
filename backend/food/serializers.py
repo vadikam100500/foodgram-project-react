@@ -87,7 +87,15 @@ class RecipeSerializer(serializers.ModelSerializer):
         recipe_name = self.initial_data.get('name')
         ingredients = self.initial_data.get('ingredients')
         tags = self.initial_data.get('tags')
+        cooking_time = self.initial_data.get('cooking_time')
         method = self.context.get('request').method
+
+        if cooking_time:
+            if cooking_time is not int or cooking_time < 1:
+                raise serializers.ValidationError(
+                    'Время приготовления должно быть '
+                    'больше минуты'
+                )
 
         if method in ('POST', 'PUT'):
             if (method == 'POST'
@@ -96,13 +104,6 @@ class RecipeSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     'Такой рецепт у вас уже есть!'
                 )
-
-            if int(self.initial_data.get('cooking_time')) < 1:
-                raise serializers.ValidationError(
-                    'Время приготовления должно быть '
-                    'больше минуты'
-                )
-
             self.ingr_validate(ingredients)
             self.tag_validate(tags)
 
@@ -110,6 +111,14 @@ class RecipeSerializer(serializers.ModelSerializer):
                 data['author'] = author
             data['ingredients'] = ingredients
             data['tags'] = tags
+
+        if method == 'PATCH':
+            if ingredients:
+                self.ingr_validate(ingredients)
+                data['ingredients'] = ingredients
+            if tags:
+                self.tag_validate(tags)
+                data['tags'] = tags
         return data
 
     def ingr_validate(self, ingredients):
@@ -120,7 +129,7 @@ class RecipeSerializer(serializers.ModelSerializer):
             )
         for ingredient in ingredients:
             amount = ingredient.get('amount')
-            if amount and int(amount) <= 0:
+            if amount is not int or amount <= 0:
                 raise serializers.ValidationError(
                     'Убедитесь, что значение количества '
                     'ингредиента больше нуля'
@@ -184,7 +193,13 @@ class RecipeSerializer(serializers.ModelSerializer):
         tags = None
         try:
             image = validated_data.pop('image')
+        except KeyError:
+            pass
+        try:
             ingredients = validated_data.pop('ingredients')
+        except KeyError:
+            pass
+        try:
             tags = validated_data.pop('tags')
         except KeyError:
             pass
@@ -224,6 +239,9 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 
 class RecipeLiteSerializer(serializers.ModelSerializer):
+    image = Base64ImageField(read_only=True)
+
     class Meta:
         model = Recipe
         fields = ('id', 'name', 'image', 'cooking_time')
+        read_only_fields = ('id', 'name', 'cooking_time')

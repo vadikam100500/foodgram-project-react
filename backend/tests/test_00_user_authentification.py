@@ -83,7 +83,7 @@ class Test00UserRegistrationAPI:
         from rest_framework.authtoken.models import Token
 
         response = user_client.post(self.url_logout)
-        assert response.status_code == 201, (
+        assert response.status_code == 204, (
             f'Проверь, что при POST запросе `{self.url_logout}` '
             'авторизованного пользователя возвращается статус 201'
         )

@@ -5,7 +5,7 @@ from django.db.models.aggregates import Sum
 from django.http.response import HttpResponse
 from django.utils.decorators import method_decorator
 from djoser.serializers import SetPasswordSerializer
-from djoser.views import TokenCreateView, TokenDestroyView
+from djoser.views import TokenCreateView
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import filters, status
 from rest_framework.decorators import action
@@ -16,16 +16,18 @@ from rest_framework.viewsets import ModelViewSet
 from food.models import Ingredient, IngredientInRecipe, Recipe, Tag
 from food.serializers import (IngredientSerializer, RecipeLiteSerializer,
                               RecipeSerializer, TagSerializer)
-from interactions.models import Favorite, Purchase
-from interactions.serializers import FavoriteSerializer, PurchaseSerializer
+from interactions.models import Favorite, Follow, Purchase
+from interactions.serializers import (FavoriteSerializer, FollowSerializer,
+                                      PurchaseSerializer,
+                                      SubscriptionsSerializer)
 from users.serializers import CustomUserGetSerializer, CustomUserSerializer
 
 from .decorators import multi_method_decorator
 from .filters import GlobalFilterBackend
-from .pagination import LimitPagination
+from .pagination import FollowPagination, LimitPagination
 from .permissions import (IsAdminOrReadIfAuthenticatedObjPerm,
                           IsAdminOrReadOnly, RecipePermission)
-from .schemas import EmptyAutoSchema, recipe_request_body
+from .schemas import EmptyAutoSchema, follower_params, recipe_request_body
 
 User = get_user_model()
 
@@ -34,14 +36,6 @@ class CustomTokenCreateView(TokenCreateView):
 
     def _action(self, serializer):
         response = super()._action(serializer)
-        response.status_code = status.HTTP_201_CREATED
-        return response
-
-
-class CustomTokenDestroyView(TokenDestroyView):
-
-    def post(self, request):
-        response = super().post(request)
         response.status_code = status.HTTP_201_CREATED
         return response
 
@@ -61,6 +55,10 @@ class CustomUserViewSet(ModelViewSet):
             return CustomUserGetSerializer
         elif self.action == 'set_password':
             return SetPasswordSerializer
+        elif self.action == 'subscriptions':
+            return SubscriptionsSerializer
+        elif self.action == 'subscribe':
+            return FollowSerializer
         return self.serializer_class
 
     @action(['get'], detail=False,
@@ -79,6 +77,76 @@ class CustomUserViewSet(ModelViewSet):
         self.request.user.set_password(serializer.data['new_password'])
         self.request.user.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(['get'], detail=False, pagination_class=FollowPagination,
+            permission_classes=[IsAuthenticated])
+    @swagger_auto_schema(responses={201: SubscriptionsSerializer})
+    def subscriptions(self, request):
+        queryset = Follow.objects.filter(user=request.user)
+        if not queryset.exists():
+            return Response({'error': 'Вы еще ни на кого не подписаны'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        page = self.paginate_queryset(queryset)
+        if page:
+            serializer = self.get_serializer(
+                page,
+                many=True,
+                context={'request': request}
+            )
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True,
+                                         context={'request': request})
+        return Response(serializer.data)
+
+    @action(['get'], detail=True, permission_classes=[IsAuthenticated])
+    @swagger_auto_schema(manual_parameters=follower_params,
+                         responses={201: SubscriptionsSerializer})
+    def subscribe(self, request, pk=None):
+        user, author = self.following_validate(request, pk)
+        if not author:
+            return Response({'error': user},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        data = {'user': user.id, 'author': author.id}
+        serializer = self.get_serializer(
+            data=data, context={'request': request}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @subscribe.mapping.delete
+    def delete_subscribe(self, request, pk=None):
+        user, author, subscribe = self.following_validate(request, pk,
+                                                          delete=True)
+        if not author:
+            return Response({'error': user},
+                            status=status.HTTP_400_BAD_REQUEST)
+        if not subscribe:
+            return Response({'error': user},
+                            status=status.HTTP_400_BAD_REQUEST)
+        subscribe.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def following_validate(self, request, pk, delete=False):
+        user = request.user
+        author = User.objects.filter(id=pk)
+        if not author.exists():
+            if delete:
+                return 'Такого пользователя еще нет', False, False
+            return 'Такого пользователя еще нет', False
+        author = author.get(id=pk)
+
+        if delete:
+            subscribe = Follow.objects.filter(user=user, author=author)
+            if not subscribe.exists():
+                return ('У вас еще нет этого пользователя в подписках',
+                        True, False)
+            else:
+                return user, author, subscribe.get(user=user, author=author)
+        return user, author
 
 
 @multi_method_decorator(
@@ -129,10 +197,17 @@ class RecipeViewSet(ModelViewSet):
     filter_backends = (GlobalFilterBackend,)
     filterset_fields = ('author', )
 
+    def get_serializer_class(self):
+        if self.action == 'favorite':
+            return FavoriteSerializer
+        elif self.action == 'shopping_cart':
+            return PurchaseSerializer
+        return self.serializer_class
+
     @action(['get'], detail=True, permission_classes=[IsAuthenticated])
     @swagger_auto_schema(responses={201: RecipeLiteSerializer})
     def favorite(self, request, pk=None):
-        return self.alt_endpoint_create(request, pk, favorite=True)
+        return self.alt_endpoint_create(request, pk)
 
     @favorite.mapping.delete
     def delete_favorite(self, request, pk=None):
@@ -141,7 +216,7 @@ class RecipeViewSet(ModelViewSet):
     @action(['get'], detail=True, permission_classes=[IsAuthenticated])
     @swagger_auto_schema(responses={201: RecipeLiteSerializer})
     def shopping_cart(self, request, pk=None):
-        return self.alt_endpoint_create(request, pk, cart=True)
+        return self.alt_endpoint_create(request, pk)
 
     @shopping_cart.mapping.delete
     def delete_shopping_cart(self, request, pk=None):
@@ -171,7 +246,7 @@ class RecipeViewSet(ModelViewSet):
 
         return response
 
-    def alt_endpoint_create(self, request, pk, favorite=False, cart=False):
+    def alt_endpoint_create(self, request, pk):
         verdict, recipe, user = self.recipe_validate(request, pk)
         if not verdict:
             return recipe
@@ -180,11 +255,9 @@ class RecipeViewSet(ModelViewSet):
             'user': user.id,
             'recipe': recipe.id,
         }
-        if favorite:
-            model_serializer = FavoriteSerializer
-        if cart:
-            model_serializer = PurchaseSerializer
-        serializer = model_serializer(data=data, context={'request': request})
+
+        serializer = self.get_serializer(data=data,
+                                         context={'request': request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -205,6 +278,7 @@ class RecipeViewSet(ModelViewSet):
             return False, Response({'error': 'Такого рецепта еще нет'},
                                    status=status.HTTP_400_BAD_REQUEST), None
         recipe = recipe.get(id=pk)
+
         if delete:
             model_answer = {
                 'favorite': (Favorite, 'избранном'),
@@ -221,4 +295,5 @@ class RecipeViewSet(ModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST
                 )
             return True, obj.get(user=user, recipe=recipe)
+
         return True, recipe, user

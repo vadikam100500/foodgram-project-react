@@ -11,7 +11,7 @@ recipe_request_body = openapi.Schema(
             items=openapi.Schema(
                 type=openapi.TYPE_OBJECT,
                 properties={
-                    'id': openapi.Schema(type=openapi.TYPE_STRING,
+                    'id': openapi.Schema(type=openapi.TYPE_INTEGER,
                                          title='id ингредиента'),
                     'amount': openapi.Schema(type=openapi.TYPE_INTEGER,
                                              title='Количество ингредиента',
@@ -40,7 +40,15 @@ recipe_request_body = openapi.Schema(
     },
 )
 
+follower_params = [
+    openapi.Parameter('id', openapi.IN_PATH,
+                      description="following id", type=openapi.TYPE_INTEGER),
+    openapi.Parameter('recipes_limit', openapi.IN_QUERY,
+                      description="recipes limit", type=openapi.TYPE_INTEGER)
+]
+
 
 class EmptyAutoSchema(SwaggerAutoSchema):
+
     def get_query_parameters(self):
         return []
