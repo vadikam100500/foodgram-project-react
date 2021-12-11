@@ -6,7 +6,7 @@ from .models import Ingredient, IngredientInRecipe, Recipe, Tag, TagInRecipe
 
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
-    prepopulated_fields = {"slug": ("name",)}
+    prepopulated_fields = {'slug': ('name',)}
     list_display = ('id', 'name', 'slug', 'color', 'preview')
     list_filter = ('name',)
     search_fields = ('name',)
@@ -39,7 +39,7 @@ class TagInRecipeAdmin(admin.StackedInline):
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
     list_display = (
-        'id', 'name', 'author', 'text', 'recipe_image',
+        'id', 'name', 'author', 'recipe_image',
         'pub_date', 'cooking_time', 'favorite'
     )
     list_select_related = True

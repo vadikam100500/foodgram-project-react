@@ -6,7 +6,7 @@ recipe_request_body = openapi.Schema(
     required=['tags', 'image', 'name', 'text', 'cooking_time'],
     title='Recipe',
     properties={
-        'ingridients': openapi.Schema(
+        'ingredients': openapi.Schema(
             type=openapi.TYPE_ARRAY,
             items=openapi.Schema(
                 type=openapi.TYPE_OBJECT,
@@ -21,7 +21,7 @@ recipe_request_body = openapi.Schema(
                 },
                 required=['id', ]
             ),
-            title='Ingridient'
+            title='Ingredient'
         ),
         'tags': openapi.Schema(
             type=openapi.TYPE_ARRAY,
@@ -32,9 +32,9 @@ recipe_request_body = openapi.Schema(
                                 title='Изображение в base64'),
         'name': openapi.Schema(type=openapi.TYPE_STRING,
                                title='Название рецепта'),
-        "text": openapi.Schema(type=openapi.TYPE_STRING,
+        'text': openapi.Schema(type=openapi.TYPE_STRING,
                                title='Описание рецепта'),
-        "cooking_time": openapi.Schema(type=openapi.TYPE_INTEGER,
+        'cooking_time': openapi.Schema(type=openapi.TYPE_INTEGER,
                                        minLength='1',
                                        title='Время приготовления'),
     },
@@ -42,9 +42,9 @@ recipe_request_body = openapi.Schema(
 
 follower_params = [
     openapi.Parameter('id', openapi.IN_PATH,
-                      description="following id", type=openapi.TYPE_INTEGER),
+                      description='following id', type=openapi.TYPE_INTEGER),
     openapi.Parameter('recipes_limit', openapi.IN_QUERY,
-                      description="recipes limit", type=openapi.TYPE_INTEGER)
+                      description='recipes limit', type=openapi.TYPE_INTEGER)
 ]
 
 

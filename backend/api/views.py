@@ -9,25 +9,20 @@ from djoser.views import TokenCreateView
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import filters, status
 from rest_framework.decorators import action
+from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
+from api import serializers
+from api.decorators import multi_method_decorator
+from api.filters import GlobalFilterBackend
+from api.pagination import FollowPagination, LimitPagination
+from api.permissions import (IsAdminOrReadIfAuthenticatedObjPerm,
+                             IsAdminOrReadOnly, RecipePermission)
+from api.schemas import EmptyAutoSchema, follower_params, recipe_request_body
 from food.models import Ingredient, IngredientInRecipe, Recipe, Tag
-from food.serializers import (IngredientSerializer, RecipeLiteSerializer,
-                              RecipeSerializer, TagSerializer)
 from interactions.models import Favorite, Follow, Purchase
-from interactions.serializers import (FavoriteSerializer, FollowSerializer,
-                                      PurchaseSerializer,
-                                      SubscriptionsSerializer)
-from users.serializers import CustomUserGetSerializer, CustomUserSerializer
-
-from .decorators import multi_method_decorator
-from .filters import GlobalFilterBackend
-from .pagination import FollowPagination, LimitPagination
-from .permissions import (IsAdminOrReadIfAuthenticatedObjPerm,
-                          IsAdminOrReadOnly, RecipePermission)
-from .schemas import EmptyAutoSchema, follower_params, recipe_request_body
 
 User = get_user_model()
 
@@ -46,19 +41,19 @@ class CustomTokenCreateView(TokenCreateView):
 )
 class CustomUserViewSet(ModelViewSet):
     queryset = User.objects.all().order_by('id')
-    serializer_class = CustomUserSerializer
+    serializer_class = serializers.CustomUserSerializer
     pagination_class = LimitPagination
     permission_classes = (IsAdminOrReadIfAuthenticatedObjPerm,)
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve', 'me'):
-            return CustomUserGetSerializer
+            return serializers.CustomUserGetSerializer
         elif self.action == 'set_password':
             return SetPasswordSerializer
         elif self.action == 'subscriptions':
-            return SubscriptionsSerializer
+            return serializers.SubscriptionsSerializer
         elif self.action == 'subscribe':
-            return FollowSerializer
+            return serializers.FollowSerializer
         return self.serializer_class
 
     @action(['get'], detail=False,
@@ -74,13 +69,15 @@ class CustomUserViewSet(ModelViewSet):
     def set_password(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        self.request.user.set_password(serializer.data['new_password'])
+        self.request.user.set_password(
+            serializer.validated_data['new_password']
+        )
         self.request.user.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(['get'], detail=False, pagination_class=FollowPagination,
             permission_classes=[IsAuthenticated])
-    @swagger_auto_schema(responses={201: SubscriptionsSerializer})
+    @swagger_auto_schema(responses={201: serializers.SubscriptionsSerializer})
     def subscriptions(self, request):
         queryset = Follow.objects.filter(user=request.user)
         if not queryset.exists():
@@ -102,7 +99,7 @@ class CustomUserViewSet(ModelViewSet):
 
     @action(['get'], detail=True, permission_classes=[IsAuthenticated])
     @swagger_auto_schema(manual_parameters=follower_params,
-                         responses={201: SubscriptionsSerializer})
+                         responses={201: serializers.SubscriptionsSerializer})
     def subscribe(self, request, pk=None):
         user, author = self.following_validate(request, pk)
         if not author:
@@ -121,10 +118,7 @@ class CustomUserViewSet(ModelViewSet):
     def delete_subscribe(self, request, pk=None):
         user, author, subscribe = self.following_validate(request, pk,
                                                           delete=True)
-        if not author:
-            return Response({'error': user},
-                            status=status.HTTP_400_BAD_REQUEST)
-        if not subscribe:
+        if not author or not subscribe:
             return Response({'error': user},
                             status=status.HTTP_400_BAD_REQUEST)
         subscribe.delete()
@@ -132,20 +126,20 @@ class CustomUserViewSet(ModelViewSet):
 
     def following_validate(self, request, pk, delete=False):
         user = request.user
-        author = User.objects.filter(id=pk)
-        if not author.exists():
+        if not User.objects.filter(id=pk).exists():
             if delete:
                 return 'Такого пользователя еще нет', False, False
             return 'Такого пользователя еще нет', False
-        author = author.get(id=pk)
+        author = get_object_or_404(User, id=pk)
 
         if delete:
-            subscribe = Follow.objects.filter(user=user, author=author)
-            if not subscribe.exists():
+            if not Follow.objects.filter(user=user, author=author).exists():
                 return ('У вас еще нет этого пользователя в подписках',
                         True, False)
             else:
-                return user, author, subscribe.get(user=user, author=author)
+                return (user, author,
+                        get_object_or_404(Follow, user=user,
+                                          author=author))
         return user, author
 
 
@@ -155,7 +149,7 @@ class CustomUserViewSet(ModelViewSet):
 )
 class TagViewSet(ModelViewSet):
     queryset = Tag.objects.all()
-    serializer_class = TagSerializer
+    serializer_class = serializers.TagSerializer
     permission_classes = (IsAdminOrReadOnly,)
 
 
@@ -165,7 +159,7 @@ class TagViewSet(ModelViewSet):
 )
 class IngredientsViewSet(ModelViewSet):
     queryset = Ingredient.objects.all()
-    serializer_class = IngredientSerializer
+    serializer_class = serializers.IngredientSerializer
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name', )
@@ -174,14 +168,14 @@ class IngredientsViewSet(ModelViewSet):
 @method_decorator(
     swagger_auto_schema(
         request_body=recipe_request_body,
-        responses={201: RecipeSerializer}
+        responses={201: serializers.RecipeSerializer}
     ),
     name='create'
 )
 @method_decorator(
     swagger_auto_schema(
         request_body=recipe_request_body,
-        responses={200: RecipeSerializer}
+        responses={200: serializers.RecipeSerializer}
     ),
     name='update'
 )
@@ -191,7 +185,7 @@ class IngredientsViewSet(ModelViewSet):
 )
 class RecipeViewSet(ModelViewSet):
     queryset = Recipe.objects.all()
-    serializer_class = RecipeSerializer
+    serializer_class = serializers.RecipeSerializer
     pagination_class = LimitPagination
     permission_classes = (RecipePermission,)
     filter_backends = (GlobalFilterBackend,)
@@ -199,13 +193,13 @@ class RecipeViewSet(ModelViewSet):
 
     def get_serializer_class(self):
         if self.action == 'favorite':
-            return FavoriteSerializer
+            return serializers.FavoriteSerializer
         elif self.action == 'shopping_cart':
-            return PurchaseSerializer
+            return serializers.PurchaseSerializer
         return self.serializer_class
 
     @action(['get'], detail=True, permission_classes=[IsAuthenticated])
-    @swagger_auto_schema(responses={201: RecipeLiteSerializer})
+    @swagger_auto_schema(responses={201: serializers.RecipeLiteSerializer})
     def favorite(self, request, pk=None):
         return self.alt_endpoint_create(request, pk)
 
@@ -214,7 +208,7 @@ class RecipeViewSet(ModelViewSet):
         return self.alt_endpoint_delete(request, pk, favorite=True)
 
     @action(['get'], detail=True, permission_classes=[IsAuthenticated])
-    @swagger_auto_schema(responses={201: RecipeLiteSerializer})
+    @swagger_auto_schema(responses={201: serializers.RecipeLiteSerializer})
     def shopping_cart(self, request, pk=None):
         return self.alt_endpoint_create(request, pk)
 
@@ -273,11 +267,10 @@ class RecipeViewSet(ModelViewSet):
     def recipe_validate(self, request, pk, delete=False,
                         favorite=False, cart=False):
         user = request.user
-        recipe = Recipe.objects.filter(id=pk)
-        if not recipe.exists():
+        if not Recipe.objects.filter(id=pk).exists():
             return False, Response({'error': 'Такого рецепта еще нет'},
                                    status=status.HTTP_400_BAD_REQUEST), None
-        recipe = recipe.get(id=pk)
+        recipe = get_object_or_404(Recipe, id=pk)
 
         if delete:
             model_answer = {
@@ -288,12 +281,11 @@ class RecipeViewSet(ModelViewSet):
                 model, answer = model_answer.get('favorite')
             if cart:
                 model, answer = model_answer.get('cart')
-            obj = model.objects.filter(user=user, recipe=recipe)
-            if not obj.exists():
+            if not model.objects.filter(user=user, recipe=recipe).exists():
                 return False, Response(
                     {'error': f'Такого рецепта еще нет в вашем {answer}'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            return True, obj.get(user=user, recipe=recipe)
+            return True, get_object_or_404(model, user=user, recipe=recipe)
 
         return True, recipe, user

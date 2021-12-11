@@ -28,17 +28,17 @@ urlpatterns = [
     path('', include(router.urls)),
     path(
         'auth/token/login/',
-        views.CustomTokenCreateView.as_view(), name="login"
+        views.CustomTokenCreateView.as_view(), name='login'
     ),
-    path('auth/token/logout/', TokenDestroyView.as_view(), name="logout")
+    path('auth/token/logout/', TokenDestroyView.as_view(), name='logout')
 ]
 
 
 schema_view = get_schema_view(
     openapi.Info(
-        title="Foodgram",
+        title='Foodgram',
         default_version='v1',
-        description=("Документация для сервиса Foodgram"),
+        description=('Документация для сервиса Foodgram'),
         contact=openapi.Contact(email=os.getenv('CONTACT_EMAIL')),
         license=openapi.License(name=os.getenv('LICENSE')),
     ),
