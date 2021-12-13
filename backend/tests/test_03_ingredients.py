@@ -121,7 +121,6 @@ class Test03IngredientAPI:
     @pytest.mark.django_db(transaction=True)
     def test_03_ingr_admin_get_post(self, user_superuser_client,
                                     create_ingredient):
-        from django.db.utils import IntegrityError
 
         create_ingredient
 

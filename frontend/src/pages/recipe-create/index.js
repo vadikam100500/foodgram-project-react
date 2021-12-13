@@ -89,10 +89,10 @@ const RecipeCreate = ({ onEdit }) => {
             history.push(`/recipes/${res.id}`)
           })
           .catch(err => {
-            const { non_field_errors } = err
-            if (non_field_errors) {
-              alert(non_field_errors.join(', '))
-            }
+            // const { non_field_errors } = err
+            // if (non_field_errors) {
+            //   alert(non_field_errors.join(', '))
+            // }
             const errors = Object.values(err)
             if (errors) {
               alert(errors.join(', '))

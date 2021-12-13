@@ -188,9 +188,12 @@ class Test05RecipeAPI:
         favorite1 = Favorite.objects.create(user=user_test, recipe=recipe)
         favorite2 = Favorite.objects.create(user=user_admin, recipe=recipe)
         responses = {
-            'user': (favorite1, user_client.get(f'{self.url}?is_favorited=true')),
-            'admin': (favorite2, user_superuser_client.get(f'{self.url}?'
-                                                           'is_favorited=true'))
+            'user': (favorite1, user_client.get(
+                f'{self.url}?is_favorited=true'
+            )),
+            'admin': (favorite2, user_superuser_client.get(
+                f'{self.url}?is_favorited=true'
+            ))
         }
         for who, (favorite, response) in responses.items():
             data = response.json()

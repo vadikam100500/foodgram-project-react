@@ -1,5 +1,6 @@
 # Food Assistant
-<!-- ![Deploy status](https://github.com/vadikam100500/API_Review/actions/workflows/api_review_workflow.yml/badge.svg) -->
+![Deploy status](https://github.com/vadikam100500/foodgram-project-react/actions/workflows/foodgram_workflow.yml/badge.svg)
+
 On this service, you can publish recipes, subscribe to publications of other users, 
 add your favorite recipes to the Favorites list, and before going to the store, 
 download a summary list of products required to prepare one or more selected dishes.
@@ -58,34 +59,26 @@ download a summary list of products required to prepare one or more selected dis
     ```sh
     $ docker-compose up
     ```
-<!-- + Open a new window of terminal and from dir of project run:
++ Open a new window of terminal and from dir of project run:
     ```sh
-    $ docker-compose exec web ./manage.py migrate --noinput
-    $ docker-compose exec web ./manage.py database
-    $ docker-compose exec web ./manage.py create_admin
-    $ docker-compose exec web ./manage.py collectstatic --no-input 
-    ``` -->
+    $ sudo docker-compose exec backend ./manage.py migrate --noinput
+    $ sudo docker-compose exec backend ./manage.py collectstatic --no-input
+    $ sudo docker-compose exec backend ./manage.py create_admin
+    $ sudo docker-compose exec backend ./manage.py loaddata data/dump.json
+    ```
 + You can get admin panel in http://localhost/admin/ with username and password, that you set in .env (DJANGO_SUPERUSER_USERNAME, DJANGO_SUPERUSER_PASSWORD)
 
-<!-- ### Continuous Integration and Continuous Deployment with testing by GithubActions:
+### Continuous Integration and Continuous Deployment with testing by GithubActions:
 + Install Docker and Docker-compose on your server.
-+ Copy docker-compose.yaml and nginx/default.conf to your server
++ Copy docker-compose.yaml and nginx.conf to your server
 + Prepare your repository in GitHub:
   + In settings of repo find secrets and set in them:
     + DOCKER_PASSWORD, DOCKER_USERNAME - for pull and download image from DockerHub
     + SECRET_KEY, ALLOWED_HOSTS - for django app
     + DB_ENGINE, DB_NAME, POSTGRES_USER, POSTGRES_PASSWORD, DB_HOST, DB_PORT - to connect to default database
     + DJANGO_SUPERUSER_USERNAME, DJANGO_SUPERUSER_EMAIL, DJANGO_SUPERUSER_PASSWORD - for creating superuser
-+ After push to github, the main application will pass the tests, update the image on DockerHub, and deploy to the server. Next, you need to connect to the server.
-    ```sh
-    $ ssh <USER>@<HOST>
-    ```
-+ Run comands like after 'docker-compose up' in local deploy, but with 'sudo', like: 
-    ```sh
-    $ sudo docker-compose exec web ./manage.py migrate --noinput
-    $ etc.
-    ``` -->
-
+    + Other secrets
++ After push to github, the main application will pass the tests, update the image on DockerHub, and deploy to the server.
 
 ## Documentation and requests examples
 

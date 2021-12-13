@@ -147,15 +147,8 @@ class RecipeSerializer(serializers.ModelSerializer):
         method = self.context.get('request').method
         author = self.context.get('request').user
         recipe_name = data.get('name')
-        cooking_time = data.get('cooking_time')
         ingredients = self.initial_data.get('ingredients')
         tags = self.initial_data.get('tags')
-
-        if cooking_time and cooking_time < 1:
-            raise serializers.ValidationError(
-                'Время приготовления должно быть '
-                'больше минуты'
-            )
 
         if method in ('POST', 'PUT'):
             if (method == 'POST'
@@ -189,11 +182,6 @@ class RecipeSerializer(serializers.ModelSerializer):
             )
         for ingredient in ingredients:
             amount = ingredient.get('amount')
-            if type(amount) is not int or amount < 1:
-                raise serializers.ValidationError(
-                    'Убедитесь, что значение количества '
-                    'ингредиента больше единицы'
-                )
             ingr_id = ingredient.get('id')
             if not Ingredient.objects.filter(id=ingr_id).exists():
                 raise serializers.ValidationError(
@@ -203,6 +191,17 @@ class RecipeSerializer(serializers.ModelSerializer):
             if ingr_id in ingrs_set:
                 raise serializers.ValidationError(
                     'Ингредиент в рецепте не должен повторяться.'
+                )
+            try:
+                int(amount)
+            except ValueError:
+                raise serializers.ValidationError(
+                    'Количество ингридиента должно быть числом'
+                )
+            if int(amount) < 1:
+                raise serializers.ValidationError(
+                    'Убедитесь, что значение количества '
+                    'ингредиента больше единицы'
                 )
             ingrs_set.add(ingr_id)
 

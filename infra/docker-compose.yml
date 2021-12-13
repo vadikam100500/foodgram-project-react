@@ -17,9 +17,7 @@ services:
       - ./.env
 
   backend:
-    build:
-      context: ../backend
-      dockerfile: Dockerfile
+    image: vadikam100500/foodgram_back:latest
     restart: always
     volumes:
       - static_value:/app/static/
@@ -30,9 +28,7 @@ services:
       - ./.env
 
   frontend:
-    build:
-      context: ../frontend
-      dockerfile: Dockerfile
+    image: vadikam100500/foodgram_front:latest
     volumes:
       - ../frontend/:/app/result_build/
 
