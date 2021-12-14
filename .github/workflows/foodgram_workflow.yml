@@ -68,7 +68,6 @@ jobs:
         key: ${{ secrets.SSH_KEY }}
         script: |
           sudo docker pull ${{ secrets.DOCKER_USERNAME }}/foodgram_back:latest
-          sudo docker pull ${{ secrets.DOCKER_USERNAME }}/foodgram_front:latest
           sudo docker-compose stop
           sudo docker-compose rm backend
           sudo fuser -k 80/tcp

@@ -1,5 +1,4 @@
 from django.contrib.auth import get_user_model
-from django.contrib.auth.hashers import make_password
 from django.contrib.auth.password_validation import validate_password
 from django.core import exceptions as django_exceptions
 from django.db import IntegrityError, transaction
@@ -53,7 +52,6 @@ class CustomUserSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     {'password': serializer_error['non_field_errors']}
                 )
-            attrs['password'] = make_password(password)
         return attrs
 
     def create(self, validated_data):

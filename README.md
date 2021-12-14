@@ -1,6 +1,8 @@
 # Food Assistant
 ![Deploy status](https://github.com/vadikam100500/foodgram-project-react/actions/workflows/foodgram_workflow.yml/badge.svg)
 
+[ Here you can see it deployed ]( https://foodassist.ga/recipes )
+
 On this service, you can publish recipes, subscribe to publications of other users, 
 add your favorite recipes to the Favorites list, and before going to the store, 
 download a summary list of products required to prepare one or more selected dishes.
@@ -63,14 +65,14 @@ download a summary list of products required to prepare one or more selected dis
     ```sh
     $ sudo docker-compose exec backend ./manage.py migrate --noinput
     $ sudo docker-compose exec backend ./manage.py collectstatic --no-input
-    $ sudo docker-compose exec backend ./manage.py create_admin
-    $ sudo docker-compose exec backend ./manage.py loaddata data/dump.json
+    $ sudo docker-compose exec backend ./manage.py create_admin  # if you don't want to load data
+    $ sudo docker-compose exec backend ./manage.py loaddata data/dump.json # My example data
     ```
 + You can get admin panel in http://localhost/admin/ with username and password, that you set in .env (DJANGO_SUPERUSER_USERNAME, DJANGO_SUPERUSER_PASSWORD)
 
 ### Continuous Integration and Continuous Deployment with testing by GithubActions:
 + Install Docker and Docker-compose on your server.
-+ Copy docker-compose.yaml and nginx.conf to your server
++ Copy .env, docker-compose.yaml and nginx.conf to your server
 + Prepare your repository in GitHub:
   + In settings of repo find secrets and set in them:
     + DOCKER_PASSWORD, DOCKER_USERNAME - for pull and download image from DockerHub
@@ -87,7 +89,7 @@ download a summary list of products required to prepare one or more selected dis
     * [ Documentation and manual work with api - Swagger]( http://localhost/api/docs/swagger/ )
 
 + If not local:
-    + ://yourhost/api/docs/redoc/ - Task and full documentation
+    + ://yourhost/api/docs/ - Task and full documentation (Redoc)
     + ://yourhost/api/docs/swagger/  - Swagger
 
 # Task

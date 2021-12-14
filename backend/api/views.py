@@ -16,11 +16,12 @@ from rest_framework.viewsets import ModelViewSet
 
 from api import serializers
 from api.decorators import multi_method_decorator
+from api.docs.schemas import (EmptyAutoSchema, follower_params,
+                              recipe_request_body)
 from api.filters import GlobalFilterBackend
 from api.pagination import FollowPagination, LimitPagination
 from api.permissions import (IsAdminOrReadIfAuthenticatedObjPerm,
                              IsAdminOrReadOnly, RecipePermission)
-from api.schemas import EmptyAutoSchema, follower_params, recipe_request_body
 from food.models import Ingredient, IngredientInRecipe, Recipe, Tag
 from interactions.models import Favorite, Follow, Purchase
 
