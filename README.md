@@ -1,6 +1,6 @@
 # Food Assistant
 ![Deploy status](https://github.com/vadikam100500/foodgram-project-react/actions/workflows/foodgram_workflow.yml/badge.svg)
-[![License](https://img.shields.io/pypi/l/oms-cms)](https://opensource.org/licenses/MIT)
+[![License](https://img.shields.io:/bower/l/mi)](https://opensource.org/licenses/MIT)
 
 [ Here you can see it deployed ]( https://foodassist.ga/recipes )
 
